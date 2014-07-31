@@ -30,16 +30,26 @@ DESTDIR=
 
 # version numbers
 GMP_VERSION=5.1.2
+GMP_SHA1SUM=2cb498322b9be4713829d94dee944259c017d615
 MPFR_VERSION=3.1.2
+MPFR_SHA1SUM=46d5a11a59a4e31f74f73dd70c5d57a59de2d0b4
 MPC_VERSION=1.0.1
+MPC_SHA1SUM=8c7e19ad0dd9b3b5cc652273403423d6cf0c5edf
 LIBELF_VERSION=0.8.13
+LIBELF_SHA1SUM=c1d6ac5f182d19dd685c4dfd74eedbfe3992425d
 GCC_VERSION=4.7.3
+GCC_SHA1SUM=69e02737bd6e1a7c6047d801600d39c32b9427ca
 GCC_AUTOCONF_VERSION=2.69
 BINUTILS_VERSION=2.23.2
+BINUTILS_SHA1SUM=042c51073205ebaf88c272d6168f9deb71984b56
 GDB_VERSION=7.6
+GDB_SHA1SUM=b64095579a20e011beeaa5b264fe23a9606ee40f
 IASL_VERSION=20140114
+IASL_SHA1SUM=04c523a241987fd86c3ad2a26a70415776790ca9
 PYTHON_VERSION=3.3.2
+PYTHON_SHA1SUM=b28c36a9752b690059dc6df4fb9b4ec9d6c5708a
 EXPAT_VERSION=2.1.0
+EXPAT_SHA1SUM=b08197d146930a5543a7b99e871cba3da614f6f0
 
 # archive locations
 GMP_ARCHIVE="http://ftpmirror.gnu.org/gmp/gmp-${GMP_VERSION}.tar.bz2"
@@ -289,10 +299,18 @@ for PACKAGE in GMP MPFR MPC LIBELF GCC BINUTILS $PYTHON_PACKAGE \
 	    $EXPAT_PACKAGE $GDB_PACKAGE IASL; do
 	archive=$PACKAGE"_ARCHIVE"
 	archive="`eval echo '$'$archive`"
+	archive_basename=`basename $archive`
+	sha1sum=$PACKAGE"_SHA1SUM"
+	sha1sum="`eval echo '$'$sha1sum`"
 	dir=$PACKAGE"_DIR"
 	dir="`eval echo '$'${dir}`"
 	test -d ${dir} && test -f ${dir}/.unpack_success || (
 		printf " * `basename $archive`\n"
+		observed_sha1sum=`sha1sum tarballs/$archive_basename|cut -f1 -d' '`
+		if [ "$observed_sha1sum" != "$sha1sum" ]; then
+			printf "\n${RED}Bad sha1sum for $archive_basename${NC}: expected $sha1sum, got $observed_sha1sum\n"
+			exit 1
+		fi
 		FLAGS=zxf
 		suffix=`echo $archive | sed 's,.*\.,,'`
 		test "$suffix" = "gz" && FLAGS=zxf
@@ -306,7 +324,7 @@ for PACKAGE in GMP MPFR MPC LIBELF GCC BINUTILS $PYTHON_PACKAGE \
 				printf "\n${RED}Failed $patch.${NC}\n"
 		done
 		touch ${dir}/.unpack_success
-	)
+	) || exit 1
 done
 printf "Unpacked and patched ... "
 printf "${green}ok${NC}\n"
