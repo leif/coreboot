@@ -19,6 +19,7 @@
 #
 
 MICROCODE_VERSION=20130222
+MICROCODE_SHA1SUM=1df2f36f0e97808861d17747826a77440a0f38f5
 MICROCODE_ARCHIVE=microcode-$MICROCODE_VERSION.tgz
 MICROCODE_FILE=microcode.dat
 INTEL_MICROCODE=http://downloadmirror.intel.com/22508/eng/$MICROCODE_ARCHIVE
@@ -30,6 +31,11 @@ INTEL_MICROCODE=http://downloadmirror.intel.com/22508/eng/$MICROCODE_ARCHIVE
 get_microcode() {
     printf "Getting microcode...\n"
     wget -nv $INTEL_MICROCODE
+    OBSERVED_SHA1SUM=`sha1sum $MICROCODE_ARCHIVE|cut -f1 -d' '`
+    if [ "$OBSERVED_SHA1SUM" != "$MICROCODE_SHA1SUM" ]; then
+        printf "$MICROCODE_ARCHIVE has wrong sha1sum: expected $MICROCODE_SHA1SUM but found $OBSERVED_SHA1SUM\n"
+        exit 1
+    fi
     tar xzf $MICROCODE_ARCHIVE
 }
 
